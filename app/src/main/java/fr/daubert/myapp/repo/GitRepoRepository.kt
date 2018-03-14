@@ -26,6 +26,7 @@ class GitRepoRepository(context: Context) {
             } else {
                 localDataSource.getRepositories(object : GitRepoLocalDataSource.OnRepoLocalReadyCallback {
                     override fun onLocalDataReady(data: ArrayList<Repository>) {
+                        onRepositoryReadyCallback.onDataReady(data)
                     }
                 })
             }
