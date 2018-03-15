@@ -1,40 +1,31 @@
 package fr.daubert.myapp.repo
 
-import android.content.Context
 import fr.daubert.myapp.NetworkManager
 import fr.daubert.myapp.model.Repository
+import io.reactivex.Observable
+import javax.inject.Inject
 
 /**
  * Created by daubert on 02/03/2018.
  */
 
-class GitRepoRepository(context: Context) {
+class GitRepoRepository @Inject constructor (val networkManager: NetworkManager) {
 
-    val networkManager = NetworkManager(context)
-    val localDataSource = GitRepoLocalDataSource()
-    val remoteDataSource = GitRepoRemoteDataSource()
+    private val localDataSource = GitRepoLocalDataSource()
+    private val remoteDataSource = GitRepoRemoteDataSource()
 
-    fun getGitRepositories(onRepositoryReadyCallback: OnRepositoryReadyCallback) {
+    fun getGitRepositories(): Observable<ArrayList<Repository>> {
         networkManager.isNetworkConnected.let {
-            if (it) {
-                remoteDataSource.getRepositories(object : GitRepoRemoteDataSource.OnRepoRemoteReadyCallback {
-                    override fun onRemoteDataReady(data: ArrayList<Repository>) {
-                        localDataSource.saveRepositories(data)
-                        onRepositoryReadyCallback.onDataReady(data)
-                    }
-                })
+            return if (it) {
+                return remoteDataSource.getRepositories().flatMap {
+                    return@flatMap localDataSource.saveRepositories(it)
+                            .toSingleDefault(it)
+                            .toObservable()
+                }
             } else {
-                localDataSource.getRepositories(object : GitRepoLocalDataSource.OnRepoLocalReadyCallback {
-                    override fun onLocalDataReady(data: ArrayList<Repository>) {
-                        onRepositoryReadyCallback.onDataReady(data)
-                    }
-                })
+                return localDataSource.getRepositories()
             }
         }
-    }
-
-    interface OnRepositoryReadyCallback {
-        fun onDataReady(data : ArrayList<Repository>)
     }
 }
 
