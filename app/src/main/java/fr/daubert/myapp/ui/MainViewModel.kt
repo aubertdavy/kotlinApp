@@ -18,9 +18,6 @@ import javax.inject.Inject
 
 class MainViewModel @Inject constructor(var gitRepoRepository: GitRepoRepository) : ViewModel() {
 
-    @Inject
-    lateinit var repoModel: GitRepoRepository
-
     var repositories = MutableLiveData<ArrayList<Repository>>()
     val isLoading = ObservableField(false)
 
@@ -29,7 +26,7 @@ class MainViewModel @Inject constructor(var gitRepoRepository: GitRepoRepository
     fun loadRepositories() {
         isLoading.set(true)
 
-        repoModel.getGitRepositories()
+        gitRepoRepository.getGitRepositories()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(object : Observer<ArrayList<Repository>> {
